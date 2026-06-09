@@ -64,8 +64,17 @@ npm run dev
 
 1. 將專案推送到 GitHub
 2. 在 [Vercel](https://vercel.com) 匯入此 repo
-3. 在 Vercel 專案設定 > Environment Variables 中，加入 `.env.local` 裡的所有 `NEXT_PUBLIC_FIREBASE_*` 變數
-4. 部署完成！
+3. 在 Vercel 專案設定 → **Environment Variables**，加入 `.env.local` 裡的所有 `NEXT_PUBLIC_FIREBASE_*` 變數（Production / Preview / Development 都要設）
+4. **重要：授權 Vercel 網域**（Google 登入失敗最常見原因）
+   - 前往 [Firebase Console](https://console.firebase.google.com/) → **Authentication** → **Settings** → **Authorized domains**
+   - 點 **Add domain**，加入你的 Vercel 網址，例如：
+     - `你的專案名稱.vercel.app`
+     - 若有自訂網域也一併加入（如 `app.example.com`）
+   - 儲存後無需重新部署，立即生效
+5. 確認 **Authentication → Sign-in method → Google** 已啟用
+6. 重新部署（若剛設定環境變數）
+
+> 正式環境使用 **redirect 登入**（較 popup 穩定）。若仍失敗，登入頁會顯示具體錯誤（例如網域未授權）。
 
 ## 專案結構
 

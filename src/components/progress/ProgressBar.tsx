@@ -78,22 +78,24 @@ export default function ProgressBar({
           </button>
         </div>
 
-        {/* 大時間軸 — 手機：時數移到上方，進度條滿寬 */}
-        <div className="mb-1 flex items-baseline justify-between gap-2 sm:hidden">
+        {/* 大時間軸 — 手機：時數移到上方 */}
+        <div className="@container/total mb-1 flex items-baseline justify-between gap-2 sm:hidden">
           <span className="text-xs font-medium text-[#9a9288]">全部</span>
           <p className="text-xs font-semibold text-[#4a443c]">
             已完成 {formatHours(totalHours.completed)}/
             {formatHours(totalHours.required)} 小時
           </p>
         </div>
-        <div className="flex items-start gap-2 sm:gap-3">
+        <div className="@container/total flex items-start gap-2 sm:gap-3">
           <span className="hidden w-8 shrink-0 pt-1 text-xs font-medium text-[#9a9288] sm:block">
             全部
           </span>
-          <div className="min-w-0 flex-1">
+          <div className="@container/progress min-w-0 flex-1">
             <div className="mb-1 flex items-center justify-between gap-2 text-xs text-[#9a9288]">
-              <span className="min-w-0 truncate">{formatDateZh(track.startDate)} 起程</span>
-              <span className="shrink-0 font-semibold text-[#4a443c]">
+              <span className="progress-hide-narrow min-w-0 truncate">
+                {formatDateZh(track.startDate)} 起程
+              </span>
+              <span className="progress-hide-tight shrink-0 font-semibold text-[#4a443c]">
                 {Math.round(totalPercent)}%
               </span>
             </div>
@@ -112,19 +114,20 @@ export default function ProgressBar({
                 />
               </div>
 
-              <div className="relative mt-0.5 h-7 w-full min-w-0 overflow-hidden">
+              <div className="progress-markers-row relative mt-0.5 h-7 w-full min-w-0 overflow-hidden">
                 {markers.map((m, i) => {
                   const isFirst = i === 0;
                   const isLast = i === markers.length - 1;
                   return (
                     <div
                       key={`${m.label}-${i}`}
-                      className={`absolute top-0 flex flex-col ${isFirst
+                      className={`absolute top-0 flex flex-col ${
+                        isFirst
                           ? "items-start"
                           : isLast
                             ? "items-end"
                             : "items-center"
-                        }`}
+                      }`}
                       style={{
                         left: isFirst ? "0%" : isLast ? "auto" : `${m.position}%`,
                         right: isLast ? "0%" : "auto",
@@ -132,16 +135,18 @@ export default function ProgressBar({
                       }}
                     >
                       <div
-                        className={`h-1.5 w-px ${m.isCurrent ? "bg-sage" : "bg-border"
-                          }`}
+                        className={`h-1.5 w-px ${
+                          m.isCurrent ? "bg-sage" : "bg-border"
+                        }`}
                       />
                       <span
-                        className={`mt-0.5 text-[10px] font-medium leading-none ${m.isCurrent
+                        className={`progress-hide-markers mt-0.5 text-[10px] font-medium leading-none ${
+                          m.isCurrent
                             ? "rounded bg-sage px-1 py-0.5 text-white"
                             : m.isPast
                               ? "text-[#9a9288]"
                               : "text-[#b5aea3]"
-                          }`}
+                        } ${!m.isCurrent ? "progress-hide-markers-mid" : ""}`}
                       >
                         {m.label}
                       </span>
@@ -152,7 +157,7 @@ export default function ProgressBar({
             </div>
           </div>
 
-          <div className="hidden w-28 shrink-0 pt-1 text-right text-xs sm:block sm:w-32">
+          <div className="progress-hide-side hidden w-28 shrink-0 pt-1 text-right text-xs sm:block sm:w-32">
             <p className="font-semibold text-[#4a443c]">
               已完成 {formatHours(totalHours.completed)}/
               {formatHours(totalHours.required)} 小時
@@ -160,21 +165,23 @@ export default function ProgressBar({
           </div>
         </div>
 
-        {/* 小時間軸 — 手機：時數移到上方 */}
-        <div className="mt-3 mb-1 flex items-baseline justify-between gap-2 sm:hidden">
+        {/* 小時間軸 */}
+        <div className="@container/week mb-1 mt-3 flex items-baseline justify-between gap-2 sm:hidden">
           <span className="text-xs font-medium text-[#9a9288]">本週</span>
           <p className="text-xs font-semibold text-[#4a443c]">
             已完成 {formatHours(weekCompleted)}/{formatHours(weekGoal)} 小時
           </p>
         </div>
-        <div className="mt-2 flex items-start gap-2 sm:gap-3">
+        <div className="@container/week mt-2 flex items-start gap-2 sm:gap-3">
           <span className="hidden w-8 shrink-0 pt-1 text-xs font-medium text-[#9a9288] sm:block">
             本週
           </span>
-          <div className="min-w-0 flex-1">
+          <div className="@container/progress min-w-0 flex-1">
             <p className="mb-1 truncate text-xs text-[#9a9288]">
-              {week.rangeLabel}
-              <span className="ml-1 text-[#b5aea3]">（共 {weekCount} 週）</span>
+              <span className="progress-hide-narrow">{week.rangeLabel}</span>
+              <span className="progress-hide-side ml-1 text-[#b5aea3]">
+                （共 {weekCount} 週）
+              </span>
             </p>
 
             <div className="relative">
@@ -189,19 +196,20 @@ export default function ProgressBar({
                 style={{ left: `calc(${weekPercent}% - 6px)` }}
               />
 
-              <div className="relative mt-0.5 h-6 w-full min-w-0 overflow-hidden">
+              <div className="progress-markers-row relative mt-0.5 h-6 w-full min-w-0 overflow-hidden">
                 {week.markers.map((d, i) => {
                   const isFirst = i === 0;
                   const isLast = i === week.markers.length - 1;
                   return (
                     <div
                       key={`week-${d.label}-${i}`}
-                      className={`absolute top-0 flex flex-col ${isFirst
+                      className={`absolute top-0 flex flex-col ${
+                        isFirst
                           ? "items-start"
                           : isLast
                             ? "items-end"
                             : "items-center"
-                        }`}
+                      }`}
                       style={{
                         left: isFirst ? "0%" : isLast ? "auto" : `${d.position}%`,
                         right: isLast ? "0%" : "auto",
@@ -209,16 +217,18 @@ export default function ProgressBar({
                       }}
                     >
                       <div
-                        className={`h-1 w-px ${d.isCurrent ? "bg-sage" : "bg-border"
-                          }`}
+                        className={`h-1 w-px ${
+                          d.isCurrent ? "bg-sage" : "bg-border"
+                        }`}
                       />
                       <span
-                        className={`mt-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-medium ${d.isCurrent
+                        className={`progress-hide-markers mt-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-medium ${
+                          d.isCurrent
                             ? "bg-sage text-white"
                             : d.isPast
                               ? "bg-tag-sage text-[#9a9288]"
                               : "bg-surface-inactive text-[#b5aea3]"
-                          }`}
+                        }`}
                       >
                         {d.label}
                       </span>
@@ -229,7 +239,7 @@ export default function ProgressBar({
             </div>
           </div>
 
-          <div className="hidden w-28 shrink-0 pt-1 text-right text-xs sm:block sm:w-32">
+          <div className="progress-hide-side hidden w-28 shrink-0 pt-1 text-right text-xs sm:block sm:w-32">
             <p className="font-semibold text-[#4a443c]">
               已完成 {formatHours(weekCompleted)}/{formatHours(weekGoal)} 小時
             </p>

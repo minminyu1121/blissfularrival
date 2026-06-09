@@ -128,11 +128,9 @@ export default function TaskRow({
 
       {!isBig && (
         <div
-          className={`flex min-w-0 items-center gap-2 md:contents ${INDENT[task.level]}`}
+          className={`@container/taskrow flex min-w-0 items-center gap-2 md:contents ${INDENT[task.level]}`}
         >
-          <div
-            className="progress-track h-1.5 min-w-0 flex-1 md:w-[21.78rem] md:max-w-full md:shrink-0 md:flex-none"
-          >
+          <div className="progress-track h-1.5 min-w-0 flex-1 md:w-[21.78rem] md:max-w-full md:shrink-0 md:flex-none">
             <div
               className={`h-full rounded-full transition-all ${
                 allDone || barPercent >= 100
@@ -145,7 +143,7 @@ export default function TaskRow({
             />
           </div>
 
-          <div className="shrink-0 whitespace-nowrap text-right text-xs text-[#9a9288]">
+          <div className="taskrow-hide-hours shrink-0 whitespace-nowrap text-right text-xs text-[#9a9288]">
             {formatHours(hours.completed)}/{formatHours(hours.required)} 時
           </div>
 

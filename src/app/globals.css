@@ -123,6 +123,61 @@ body {
   background-color: var(--surface-inactive);
 }
 
+/*
+ * 進度條容器查詢 — 寬度變窄時自動隱藏文字
+ * @container/progress 綁在進度條外層；@container/total、/week 綁在整列
+ */
+@container progress (max-width: 13rem) {
+  .progress-hide-narrow {
+    display: none;
+  }
+}
+
+@container progress (max-width: 9rem) {
+  .progress-hide-tight {
+    display: none;
+  }
+
+  .progress-markers-row {
+    height: 0.25rem;
+  }
+}
+
+@container progress (max-width: 11rem) {
+  .progress-hide-markers-mid {
+    display: none;
+  }
+}
+
+@container progress (max-width: 8rem) {
+  .progress-hide-markers {
+    display: none;
+  }
+
+  .progress-markers-row {
+    height: 0;
+    margin-top: 0;
+  }
+}
+
+@container total (max-width: 30rem) {
+  .progress-hide-side {
+    display: none;
+  }
+}
+
+@container week (max-width: 30rem) {
+  .progress-hide-side {
+    display: none;
+  }
+}
+
+@container taskrow (max-width: 14rem) {
+  .taskrow-hide-hours {
+    display: none;
+  }
+}
+
 /* 數字輸入框隱藏上下鍵，直接打字 */
 .input-number-plain {
   -moz-appearance: textfield;
