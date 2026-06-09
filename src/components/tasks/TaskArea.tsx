@@ -6,7 +6,9 @@ import type { GoalTrack } from "@/lib/goalTracks";
 import {
   LEVEL_LABELS,
   flattenTaskTree,
+  getSiblingTasks,
   getWeekKey,
+  reorderTask,
   type Task,
   type TaskLevel,
 } from "@/lib/tasks";
@@ -137,6 +139,12 @@ export default function TaskArea({ track, embedded }: TaskAreaProps) {
     await updateGoalTrack(track.id, { tasks: updated });
   };
 
+  const handleMoveTask = async (id: string, direction: "up" | "down") => {
+    const reordered = reorderTask(tasks, id, direction);
+    if (!reordered) return;
+    await updateGoalTrack(track.id, { tasks: reordered });
+  };
+
   const handleDelete = async (id: string) => {
     const toDelete = new Set<string>();
     const collect = (tid: string) => {
@@ -157,22 +165,17 @@ export default function TaskArea({ track, embedded }: TaskAreaProps) {
     addDraft?.level === "big" && addDraft.parentId === null;
 
   const wrapperClass = embedded
-    ? "border-t border-border/50 px-6 pb-6 pt-4"
+    ? "border-t border-border/50 px-6 pb-4 pt-3"
     : "mt-4 rounded-2xl bg-surface p-6 shadow-sm ring-1 ring-border";
 
   return (
     <div className={wrapperClass}>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <label className="shrink-0 text-sm font-semibold text-[#4a443c]">
-          目標
-        </label>
-        <div className="min-w-0 flex-1 rounded-xl border border-border bg-background/50 px-4 py-2 text-sm text-[#6b6358]">
-          {track.title}
-        </div>
+      <div className="mb-2 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-[#4a443c]">所有任務</h3>
         <button
           onClick={() => openAddDraft("big")}
           disabled={saving}
-          className="rounded-lg border border-border bg-sage px-3 py-1.5 text-xs font-medium text-white hover:bg-sage-dark"
+          className="rounded-lg border border-border bg-tag-sage px-3 py-1.5 text-xs font-medium text-[#6b6358] hover:bg-surface-tan hover:text-[#4a443c]"
         >
           + {LEVEL_LABELS.big}
         </button>
@@ -188,7 +191,7 @@ export default function TaskArea({ track, embedded }: TaskAreaProps) {
       )}
 
       {flatTasks.length === 0 && !isAddingBig ? (
-        <p className="py-8 text-center text-sm text-[#b5aea3]">
+        <p className="py-6 text-center text-sm text-[#b5aea3]">
           尚無任務，點「+ 大任務」開始建立
         </p>
       ) : (
@@ -200,6 +203,8 @@ export default function TaskArea({ track, embedded }: TaskAreaProps) {
             const isAddingChild =
               addDraft?.parentId === task.id &&
               addDraft.level === childLevel;
+            const siblings = getSiblingTasks(tasks, task);
+            const siblingIndex = siblings.findIndex((t) => t.id === task.id);
 
             return (
               <div key={task.id}>
@@ -207,11 +212,14 @@ export default function TaskArea({ track, embedded }: TaskAreaProps) {
                   task={task}
                   tasks={tasks}
                   isSelected={selectedTaskId === task.id}
+                  canMoveUp={siblingIndex > 0}
+                  canMoveDown={siblingIndex < siblings.length - 1}
                   onSelect={handleSelectTask}
                   onToggleDone={handleToggleDone}
                   onAdjustHours={handleAdjustHours}
                   onUpdateTitle={handleUpdateTitle}
                   onUpdateRequiredHours={handleUpdateRequiredHours}
+                  onMove={handleMoveTask}
                   onDelete={handleDelete}
                 />
                 {showAddChild && (
@@ -225,7 +233,7 @@ export default function TaskArea({ track, embedded }: TaskAreaProps) {
                         onCancel={closeAddDraft}
                       />
                     ) : (
-                      <div className="border-b border-border/50 py-2">
+                      <div className="border-b border-border/50 py-1">
                         <button
                           onClick={() => openAddDraft(childLevel, task.id)}
                           disabled={saving}

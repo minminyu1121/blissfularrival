@@ -62,7 +62,7 @@ export default function AddTaskInline({
 
   return (
     <div
-      className={`border-b border-border/50 py-3 ${INDENT[level]}`}
+      className={`border-b border-border/50 py-2 ${INDENT[level]}`}
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="shrink-0 text-xs font-medium text-[#9e9e9e]">

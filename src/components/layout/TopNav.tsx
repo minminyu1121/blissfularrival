@@ -41,11 +41,11 @@ export default function TopNav() {
             {loading ? (
               <div className="mx-auto h-4 w-48 animate-pulse rounded-full bg-surface-inactive" />
             ) : (
-              <p className="truncate text-sm text-[#9a9288]">
-                <span className="font-semibold text-[#4a443c]">
+              <p className="flex min-w-0 items-baseline justify-center gap-3 text-sm text-[#9a9288]">
+                <span className="shrink-0 font-semibold text-[#4a443c]">
                   嗨！{displayName}
                 </span>
-                {greetingText}
+                <span className="truncate">{greetingText}</span>
               </p>
             )}
           </div>

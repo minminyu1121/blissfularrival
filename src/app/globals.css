@@ -82,6 +82,40 @@ body {
   background-color: var(--surface-tan);
 }
 
+/* 主目標卡片外框 — 漸層邊線 + 往外光暈（不改內容底色） */
+.goal-track-highlight {
+  position: relative;
+  isolation: isolate;
+}
+.goal-track-highlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: var(--accent-gradient);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.goal-track-highlight::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  z-index: -1;
+  border-radius: calc(1rem + 6px);
+  background: var(--accent-gradient);
+  opacity: 0.22;
+  filter: blur(10px);
+  pointer-events: none;
+}
+
 /* 進度條軌道（無邊框） */
 .progress-track {
   overflow: hidden;

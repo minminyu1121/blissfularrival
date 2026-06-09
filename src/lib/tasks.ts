@@ -124,3 +124,31 @@ export function getParentLevel(level: TaskLevel): TaskLevel | null {
   if (level === "mini") return "small";
   return null;
 }
+
+export function getSiblingTasks(tasks: Task[], task: Task): Task[] {
+  return tasks
+    .filter((t) => t.parentId === task.parentId)
+    .sort((a, b) => a.order - b.order);
+}
+
+// 在同層兄弟任務間上移／下移
+export function reorderTask(
+  tasks: Task[],
+  taskId: string,
+  direction: "up" | "down"
+): Task[] | null {
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) return null;
+
+  const siblings = getSiblingTasks(tasks, task);
+  const index = siblings.findIndex((t) => t.id === taskId);
+  const swapIndex = direction === "up" ? index - 1 : index + 1;
+  if (swapIndex < 0 || swapIndex >= siblings.length) return null;
+
+  const other = siblings[swapIndex];
+  return tasks.map((t) => {
+    if (t.id === task.id) return { ...t, order: other.order };
+    if (t.id === other.id) return { ...t, order: task.order };
+    return t;
+  });
+}

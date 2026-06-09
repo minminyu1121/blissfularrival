@@ -10,7 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/contexts/AuthProvider";
-import { createDefaultGoalTracks, type GoalTrack } from "@/lib/goalTracks";
+import {
+  createDefaultGoalTracks,
+  reorderGoalTrack,
+  type GoalTrack,
+} from "@/lib/goalTracks";
 import {
   DEFAULT_GREETINGS,
   createUserProfile,
@@ -32,6 +36,10 @@ interface UserProfileContextType {
     updates: Partial<
       Pick<GoalTrack, "title" | "startDate" | "targetDate" | "tasks" | "weeklyProgress">
     >
+  ) => Promise<void>;
+  reorderGoalTracks: (
+    trackId: string,
+    direction: "up" | "down"
   ) => Promise<void>;
 }
 
@@ -180,6 +188,15 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
     [profile, persistProfile]
   );
 
+  const reorderGoalTracks = useCallback(
+    async (trackId: string, direction: "up" | "down") => {
+      const reordered = reorderGoalTrack(profile.goalTracks, trackId, direction);
+      if (!reordered) return;
+      await persistProfile({ ...profile, goalTracks: reordered });
+    },
+    [profile, persistProfile]
+  );
+
   return (
     <UserProfileContext.Provider
       value={{
@@ -190,6 +207,7 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
         error,
         updateProfile,
         updateGoalTrack,
+        reorderGoalTracks,
       }}
     >
       {children}

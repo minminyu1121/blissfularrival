@@ -57,6 +57,31 @@ export function parseTasks(raw: unknown): Task[] {
     }));
 }
 
+export function getSortedGoalTracks(tracks: GoalTrack[]): GoalTrack[] {
+  return [...tracks].sort((a, b) => a.order - b.order);
+}
+
+export function reorderGoalTrack(
+  tracks: GoalTrack[],
+  trackId: string,
+  direction: "up" | "down"
+): GoalTrack[] | null {
+  const sorted = getSortedGoalTracks(tracks);
+  const index = sorted.findIndex((t) => t.id === trackId);
+  if (index < 0) return null;
+
+  const swapIndex = direction === "up" ? index - 1 : index + 1;
+  if (swapIndex < 0 || swapIndex >= sorted.length) return null;
+
+  const current = sorted[index];
+  const other = sorted[swapIndex];
+  return tracks.map((t) => {
+    if (t.id === current.id) return { ...t, order: other.order };
+    if (t.id === other.id) return { ...t, order: current.order };
+    return t;
+  });
+}
+
 export function parseGoalTrack(raw: Record<string, unknown>): GoalTrack {
   const wp = raw.weeklyProgress as Record<string, unknown> | undefined;
   return {

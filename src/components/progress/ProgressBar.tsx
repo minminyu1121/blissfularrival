@@ -65,7 +65,7 @@ export default function ProgressBar({
       <div className={wrapperClass}>
         {/* 標題列：日期 + 目標名稱 */}
         <div className="mb-5 flex items-center justify-between gap-3">
-          <h2 className="font-serif text-xl font-semibold text-[#4a443c]">
+          <h2 className="min-w-0 flex-1 truncate font-serif text-xl font-semibold text-[#4a443c]">
             {formatDateZh(track.targetDate)} {track.title}
           </h2>
           <button
@@ -148,11 +148,8 @@ export default function ProgressBar({
             </div>
           </div>
 
-          <div className="w-28 shrink-0 pt-1 text-right text-xs leading-relaxed sm:w-32">
+          <div className="w-28 shrink-0 pt-1 text-right text-xs sm:w-32">
             <p className="whitespace-nowrap font-semibold text-[#4a443c]">
-              {formatDateZh(track.targetDate)} 抵達
-            </p>
-            <p className="mt-0.5 whitespace-nowrap font-semibold text-[#4a443c]">
               已完成 {formatHours(totalHours.completed)}/
               {formatHours(totalHours.required)} 小時
             </p>

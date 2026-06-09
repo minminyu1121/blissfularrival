@@ -89,11 +89,11 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
           {/* 預覽 — 漸層標籤 */}
           <div className="mb-6 rounded-2xl bg-surface-inactive px-5 py-4">
             <p className="text-xs font-medium text-[#9e9e9e]">招呼語預覽</p>
-            <p className="mt-2 text-sm text-[#9e9e9e]">
-              <span className="font-semibold text-[#616161]">
-                Hi，{previewName}！
+            <p className="mt-2 flex items-baseline gap-3 text-sm text-[#9e9e9e]">
+              <span className="shrink-0 font-semibold text-[#616161]">
+                嗨！{previewName}
               </span>
-              {previewGreeting}
+              <span>{previewGreeting}</span>
             </p>
             {previewGreetings.length > 1 && (
               <p className="mt-3 text-xs text-[#bdbdbd]">

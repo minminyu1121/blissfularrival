@@ -18,7 +18,10 @@ interface TaskRowProps {
   onAdjustHours: (id: string, delta: number) => void;
   onUpdateTitle: (id: string, title: string) => void;
   onUpdateRequiredHours: (id: string, requiredHours: number) => void;
+  onMove: (id: string, direction: "up" | "down") => void;
   onDelete: (id: string) => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
 }
 
 const INDENT: Record<Task["level"], string> = {
@@ -36,7 +39,10 @@ export default function TaskRow({
   onAdjustHours,
   onUpdateTitle,
   onUpdateRequiredHours,
+  onMove,
   onDelete,
+  canMoveUp = false,
+  canMoveDown = false,
 }: TaskRowProps) {
   const [title, setTitle] = useState(task.title);
   const [requiredDraft, setRequiredDraft] = useState(String(task.requiredHours));
@@ -76,13 +82,48 @@ export default function TaskRow({
           onSelect?.(task.id);
         }
       }}
-      className={`group grid cursor-pointer items-center gap-x-3 border-b border-border/40 py-2.5 transition-colors ${
+      className={`group grid cursor-pointer items-center gap-x-2 border-b border-border/40 py-1.5 transition-colors ${
         isBig
           ? "grid-cols-[minmax(0,1fr)_4.5rem_6.75rem_1.5rem]"
-          : "grid-cols-[minmax(0,11rem)_minmax(0,1fr)_4.5rem_6.75rem_1.5rem]"
+          : "grid-cols-[minmax(0,1fr)_18rem_4.5rem_6.75rem_1.5rem]"
       } ${isSelected ? "bg-tag-sage/70" : "hover:bg-background/60"}`}
     >
-      <div className={`flex min-w-0 items-center gap-2 ${INDENT[task.level]}`}>
+      <div
+        className={`flex min-w-0 items-center gap-1.5 overflow-hidden ${INDENT[task.level]}`}
+      >
+        <div
+          className={`flex shrink-0 flex-col gap-0.5 transition-opacity ${
+            isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          }`}
+        >
+          <button
+            type="button"
+            disabled={!canMoveUp}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMove(task.id, "up");
+            }}
+            className="flex h-4 w-4 items-center justify-center rounded text-[10px] text-[#b5aea3] hover:bg-tag-sage hover:text-[#4a443c] disabled:cursor-not-allowed disabled:opacity-30"
+            title="上移"
+            aria-label="上移任務"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            disabled={!canMoveDown}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMove(task.id, "down");
+            }}
+            className="flex h-4 w-4 items-center justify-center rounded text-[10px] text-[#b5aea3] hover:bg-tag-sage hover:text-[#4a443c] disabled:cursor-not-allowed disabled:opacity-30"
+            title="下移"
+            aria-label="下移任務"
+          >
+            ↓
+          </button>
+        </div>
+
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -108,17 +149,18 @@ export default function TaskRow({
           onBlur={() => {
             if (title !== task.title) onUpdateTitle(task.id, title);
           }}
-          className={`min-w-0 w-full bg-transparent text-sm outline-none placeholder:text-[#b5aea3] ${
+          className={`min-w-0 flex-1 truncate bg-transparent text-sm outline-none placeholder:text-[#b5aea3] ${
             task.level === "big"
               ? "font-semibold text-[#4a443c]"
               : "text-[#6b6358]"
           }`}
           placeholder="任務名稱"
+          title={title}
         />
       </div>
 
       {!isBig && (
-        <div className="progress-track h-1.5 w-full min-w-0">
+        <div className="progress-track h-1.5 w-full shrink-0">
           <div
             className={`h-full rounded-full transition-all ${
               allDone || barPercent >= 100 ? "bg-sage" : barPercent > 0 ? "bg-tan" : "bg-transparent"
