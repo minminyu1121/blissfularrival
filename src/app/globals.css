@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
+/* 配色 — 亞麻紙底 + 暖陶土主色 + 土褐 */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f2ec;
+  --foreground: #6b6358;
+  --foreground-strong: #4a443c;
+  --muted: #9a9288;
+  --muted-light: #b5aea3;
+  --border: #d4ccc0;
+  --surface: #faf8f4;
+  --surface-sage: #f0e6e2;
+  --surface-tan: #ede6dc;
+  --surface-inactive: #e8e2d8;
+  --sage: #c4846c;
+  --sage-dark: #a96d58;
+  --tan: #b59677;
+  --tan-dark: #a88568;
+  --coral: #c97a6f;
+  --accent: #c4846c;
+  --accent-dark: #a96d58;
+  --accent-gradient: linear-gradient(to right, #c4846c, #d49a84);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-surface-inactive: var(--surface-inactive);
+  --color-sage: var(--sage);
+  --color-sage-dark: var(--sage-dark);
+  --color-tan: var(--tan);
+  --color-tan-dark: var(--tan-dark);
+  --color-coral: var(--coral);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.font-serif {
+  font-family: "Songti TC", "STSong", "Noto Serif TC", Georgia, "Times New Roman", serif;
+}
+
+/* 主色按鈕 / 進度填色 */
+.bg-accent-gradient {
+  background: var(--accent-gradient);
+}
+
+.bg-accent {
+  background-color: var(--accent);
+}
+
+.bg-sage {
+  background-color: var(--sage);
+}
+
+.bg-tan {
+  background-color: var(--tan);
+}
+
+.text-accent-gradient {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-tag-sage {
+  background-color: var(--surface-sage);
+}
+
+.bg-tag-tan {
+  background-color: var(--surface-tan);
+}
+
+.bg-surface-tan {
+  background-color: var(--surface-tan);
+}
+
+/* 進度條軌道（無邊框） */
+.progress-track {
+  overflow: hidden;
+  border-radius: 9999px;
+  background-color: var(--surface-inactive);
+}
+
+/* 數字輸入框隱藏上下鍵，直接打字 */
+.input-number-plain {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.input-number-plain::-webkit-inner-spin-button,
+.input-number-plain::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 輸入框聚焦 */
+.focus-accent:focus {
+  border-color: var(--sage);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 132, 108, 0.22);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--muted-light);
+  border-radius: 3px;
 }
