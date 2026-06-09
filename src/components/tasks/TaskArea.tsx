@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useTaskPanel } from "@/contexts/TaskPanelProvider";
 import { useUserProfile } from "@/contexts/UserProfileProvider";
 import type { GoalTrack } from "@/lib/goalTracks";
 import {
   LEVEL_LABELS,
   flattenTaskTree,
-  getSiblingTasks,
+  createEmptyTaskExtras,
   getWeekKey,
-  reorderTask,
   type Task,
   type TaskLevel,
 } from "@/lib/tasks";
@@ -37,8 +37,9 @@ interface AddDraft {
 
 export default function TaskArea({ track, embedded }: TaskAreaProps) {
   const { saving, updateGoalTrack } = useUserProfile();
+  const { toggleTaskPanel, isTaskPanelOpen } = useTaskPanel();
   const [addDraft, setAddDraft] = useState<AddDraft | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [headerSelected, setHeaderSelected] = useState(false);
 
   const tasks = track.tasks;
 
@@ -52,16 +53,33 @@ export default function TaskArea({ track, embedded }: TaskAreaProps) {
 
   const closeAddDraft = () => setAddDraft(null);
 
-  const handleSelectTask = (id: string) => {
-    setSelectedTaskId((prev) => (prev === id ? null : id));
+  /** 點勾選框左側「+」：直接開啟／關閉子任務新增 */
+  const handleAddChildClick = (taskId: string, level: TaskLevel) => {
+    const isOpen =
+      addDraft?.parentId === taskId && addDraft.level === level;
+    if (isOpen) {
+      closeAddDraft();
+    } else {
+      openAddDraft(level, taskId);
+    }
   };
 
+  const handleOpenPanel = (id: string) => {
+    toggleTaskPanel(track.id, id);
+  };
+
+  const isPanelOpen = (id: string) => isTaskPanelOpen(track.id, id);
+
   const handleAdd = async (
-    input: Omit<Task, "id" | "order" | "done" | "completedHours">
+    input: Omit<
+      Task,
+      "id" | "order" | "done" | "completedHours" | "todos" | "archivedTodos" | "notes"
+    >
   ) => {
     const siblings = tasks.filter((t) => t.parentId === input.parentId);
     const newTask: Task = {
       ...input,
+      ...createEmptyTaskExtras(),
       id: crypto.randomUUID(),
       completedHours: 0,
       done: false,
@@ -122,63 +140,33 @@ export default function TaskArea({ track, embedded }: TaskAreaProps) {
     });
   };
 
-  const handleUpdateTitle = async (id: string, title: string) => {
-    const updated = tasks.map((t) => (t.id === id ? { ...t, title } : t));
-    await updateGoalTrack(track.id, { tasks: updated });
-  };
-
-  const handleUpdateRequiredHours = async (id: string, requiredHours: number) => {
-    const updated = tasks.map((t) => {
-      if (t.id !== id) return t;
-      return {
-        ...t,
-        requiredHours,
-        done: requiredHours > 0 && t.completedHours >= requiredHours,
-      };
-    });
-    await updateGoalTrack(track.id, { tasks: updated });
-  };
-
-  const handleMoveTask = async (id: string, direction: "up" | "down") => {
-    const reordered = reorderTask(tasks, id, direction);
-    if (!reordered) return;
-    await updateGoalTrack(track.id, { tasks: reordered });
-  };
-
-  const handleDelete = async (id: string) => {
-    const toDelete = new Set<string>();
-    const collect = (tid: string) => {
-      toDelete.add(tid);
-      tasks.filter((t) => t.parentId === tid).forEach((c) => collect(c.id));
-    };
-    collect(id);
-    if (selectedTaskId && toDelete.has(selectedTaskId)) {
-      setSelectedTaskId(null);
-    }
-    await updateGoalTrack(track.id, {
-      tasks: tasks.filter((t) => !toDelete.has(t.id)),
-    });
-  };
-
   const flatTasks = flattenTaskTree(tasks);
   const isAddingBig =
     addDraft?.level === "big" && addDraft.parentId === null;
 
   const wrapperClass = embedded
-    ? "border-t border-border/50 px-6 pb-4 pt-3"
-    : "mt-4 rounded-2xl bg-surface p-6 shadow-sm ring-1 ring-border";
+    ? "border-t border-border/50 px-3 pb-4 pt-3 sm:px-6"
+    : "mt-4 rounded-2xl bg-surface p-4 shadow-sm ring-1 ring-border sm:p-6";
 
   return (
     <div className={wrapperClass}>
       <div className="mb-2 flex items-center gap-2">
-        <h3 className="text-sm font-semibold text-[#4a443c]">所有任務</h3>
         <button
-          onClick={() => openAddDraft("big")}
-          disabled={saving}
-          className="rounded-lg border border-border bg-tag-sage px-3 py-1.5 text-xs font-medium text-[#6b6358] hover:bg-surface-tan hover:text-[#4a443c]"
+          type="button"
+          onClick={() => setHeaderSelected((prev) => !prev)}
+          className="text-xs font-medium text-[#b5aea3] hover:text-[#9a9288]"
         >
-          + {LEVEL_LABELS.big}
+          所有任務
         </button>
+        {headerSelected && (
+          <button
+            onClick={() => openAddDraft("big")}
+            disabled={saving}
+            className="rounded-lg border border-border bg-tag-sage px-3 py-1.5 text-xs font-medium text-[#6b6358] hover:bg-surface-tan hover:text-[#4a443c]"
+          >
+            + {LEVEL_LABELS.big}
+          </button>
+        )}
       </div>
 
       {isAddingBig && (
@@ -192,57 +180,44 @@ export default function TaskArea({ track, embedded }: TaskAreaProps) {
 
       {flatTasks.length === 0 && !isAddingBig ? (
         <p className="py-6 text-center text-sm text-[#b5aea3]">
-          尚無任務，點「+ 大任務」開始建立
+          尚無任務，點「所有任務」開始建立
         </p>
       ) : (
-        <div>
+        <div className="min-w-0 overflow-x-auto">
           {flatTasks.map((task) => {
             const childLevel = CHILD_LEVEL[task.level];
-            const showAddChild =
-              selectedTaskId === task.id && childLevel !== undefined;
             const isAddingChild =
+              childLevel !== undefined &&
               addDraft?.parentId === task.id &&
               addDraft.level === childLevel;
-            const siblings = getSiblingTasks(tasks, task);
-            const siblingIndex = siblings.findIndex((t) => t.id === task.id);
-
             return (
               <div key={task.id}>
                 <TaskRow
                   task={task}
                   tasks={tasks}
-                  isSelected={selectedTaskId === task.id}
-                  canMoveUp={siblingIndex > 0}
-                  canMoveDown={siblingIndex < siblings.length - 1}
-                  onSelect={handleSelectTask}
+                  isPanelOpen={isPanelOpen(task.id)}
+                  childLevelLabel={
+                    childLevel ? LEVEL_LABELS[childLevel] : undefined
+                  }
+                  isAddingChild={isAddingChild}
+                  onAddChild={
+                    childLevel
+                      ? () => handleAddChildClick(task.id, childLevel)
+                      : undefined
+                  }
+                  onOpenPanel={handleOpenPanel}
                   onToggleDone={handleToggleDone}
                   onAdjustHours={handleAdjustHours}
-                  onUpdateTitle={handleUpdateTitle}
-                  onUpdateRequiredHours={handleUpdateRequiredHours}
-                  onMove={handleMoveTask}
-                  onDelete={handleDelete}
                 />
-                {showAddChild && (
+                {isAddingChild && (
                   <div className={ADD_CHILD_INDENT[task.level]}>
-                    {isAddingChild ? (
-                      <AddTaskInline
-                        level={childLevel}
-                        parentId={task.id}
-                        disabled={saving}
-                        onAdd={handleAdd}
-                        onCancel={closeAddDraft}
-                      />
-                    ) : (
-                      <div className="border-b border-border/50 py-1">
-                        <button
-                          onClick={() => openAddDraft(childLevel, task.id)}
-                          disabled={saving}
-                          className="rounded-lg border border-dashed border-border px-3 py-1.5 text-xs font-medium text-[#9a9288] hover:border-sage hover:bg-tag-sage hover:text-[#4a443c]"
-                        >
-                          + {LEVEL_LABELS[childLevel]}
-                        </button>
-                      </div>
-                    )}
+                    <AddTaskInline
+                      level={childLevel}
+                      parentId={task.id}
+                      disabled={saving}
+                      onAdd={handleAdd}
+                      onCancel={closeAddDraft}
+                    />
                   </div>
                 )}
               </div>

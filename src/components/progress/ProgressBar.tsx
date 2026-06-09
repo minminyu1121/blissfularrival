@@ -48,8 +48,8 @@ export default function ProgressBar({
   const weekPercent = getHoursProgressPercent(weekCompleted, weekGoal);
 
   const wrapperClass = embedded
-    ? "px-6 pb-4 pt-6"
-    : "rounded-2xl bg-surface p-6 shadow-sm ring-1 ring-border";
+    ? "px-3 pb-4 pt-5 sm:px-6 sm:pt-6"
+    : "rounded-2xl bg-surface p-4 shadow-sm ring-1 ring-border sm:p-6";
 
   if (loading) {
     return (
@@ -64,13 +64,13 @@ export default function ProgressBar({
     <>
       <div className={wrapperClass}>
         {/* 標題列：日期 + 目標名稱 */}
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <h2 className="min-w-0 flex-1 truncate font-serif text-xl font-semibold text-[#4a443c]">
+        <div className="mb-4 flex items-center justify-between gap-2 sm:mb-5 sm:gap-3">
+          <h2 className="min-w-0 flex-1 truncate font-serif text-lg font-semibold text-[#4a443c] sm:text-xl">
             {formatDateZh(track.targetDate)} {track.title}
           </h2>
           <button
             onClick={() => setModalOpen(true)}
-            className="shrink-0 rounded-full border border-border bg-surface-tan px-4 py-1.5 text-xs font-medium text-[#6b6358] transition-all hover:border-sage hover:bg-tag-sage hover:text-[#4a443c]"
+            className="shrink-0 rounded-full border border-border bg-surface-tan px-3 py-1 text-xs font-medium text-[#6b6358] transition-all hover:border-sage hover:bg-tag-sage hover:text-[#4a443c] sm:px-4 sm:py-1.5"
             aria-label="設定進度目標"
             title="設定目標"
           >
@@ -78,14 +78,21 @@ export default function ProgressBar({
           </button>
         </div>
 
-        {/* 大時間軸 */}
+        {/* 大時間軸 — 手機：時數移到上方，進度條滿寬 */}
+        <div className="mb-1 flex items-baseline justify-between gap-2 sm:hidden">
+          <span className="text-xs font-medium text-[#9a9288]">全部</span>
+          <p className="text-xs font-semibold text-[#4a443c]">
+            已完成 {formatHours(totalHours.completed)}/
+            {formatHours(totalHours.required)} 小時
+          </p>
+        </div>
         <div className="flex items-start gap-2 sm:gap-3">
-          <span className="w-8 shrink-0 pt-1 text-xs font-medium text-[#9a9288]">
+          <span className="hidden w-8 shrink-0 pt-1 text-xs font-medium text-[#9a9288] sm:block">
             全部
           </span>
           <div className="min-w-0 flex-1">
-            <div className="mb-1 flex items-center justify-between text-xs text-[#9a9288]">
-              <span className="shrink-0">{formatDateZh(track.startDate)} 起程</span>
+            <div className="mb-1 flex items-center justify-between gap-2 text-xs text-[#9a9288]">
+              <span className="min-w-0 truncate">{formatDateZh(track.startDate)} 起程</span>
               <span className="shrink-0 font-semibold text-[#4a443c]">
                 {Math.round(totalPercent)}%
               </span>
@@ -105,20 +112,19 @@ export default function ProgressBar({
                 />
               </div>
 
-              <div className="relative mt-0.5 h-7 w-full">
+              <div className="relative mt-0.5 h-7 w-full min-w-0 overflow-hidden">
                 {markers.map((m, i) => {
                   const isFirst = i === 0;
                   const isLast = i === markers.length - 1;
                   return (
                     <div
                       key={`${m.label}-${i}`}
-                      className={`absolute top-0 flex flex-col ${
-                        isFirst
+                      className={`absolute top-0 flex flex-col ${isFirst
                           ? "items-start"
                           : isLast
                             ? "items-end"
                             : "items-center"
-                      }`}
+                        }`}
                       style={{
                         left: isFirst ? "0%" : isLast ? "auto" : `${m.position}%`,
                         right: isLast ? "0%" : "auto",
@@ -126,18 +132,16 @@ export default function ProgressBar({
                       }}
                     >
                       <div
-                        className={`h-1.5 w-px ${
-                          m.isCurrent ? "bg-sage" : "bg-border"
-                        }`}
+                        className={`h-1.5 w-px ${m.isCurrent ? "bg-sage" : "bg-border"
+                          }`}
                       />
                       <span
-                        className={`mt-0.5 text-[10px] font-medium leading-none ${
-                          m.isCurrent
+                        className={`mt-0.5 text-[10px] font-medium leading-none ${m.isCurrent
                             ? "rounded bg-sage px-1 py-0.5 text-white"
                             : m.isPast
                               ? "text-[#9a9288]"
                               : "text-[#b5aea3]"
-                        }`}
+                          }`}
                       >
                         {m.label}
                       </span>
@@ -148,21 +152,27 @@ export default function ProgressBar({
             </div>
           </div>
 
-          <div className="w-28 shrink-0 pt-1 text-right text-xs sm:w-32">
-            <p className="whitespace-nowrap font-semibold text-[#4a443c]">
+          <div className="hidden w-28 shrink-0 pt-1 text-right text-xs sm:block sm:w-32">
+            <p className="font-semibold text-[#4a443c]">
               已完成 {formatHours(totalHours.completed)}/
               {formatHours(totalHours.required)} 小時
             </p>
           </div>
         </div>
 
-        {/* 小時間軸 */}
+        {/* 小時間軸 — 手機：時數移到上方 */}
+        <div className="mt-3 mb-1 flex items-baseline justify-between gap-2 sm:hidden">
+          <span className="text-xs font-medium text-[#9a9288]">本週</span>
+          <p className="text-xs font-semibold text-[#4a443c]">
+            已完成 {formatHours(weekCompleted)}/{formatHours(weekGoal)} 小時
+          </p>
+        </div>
         <div className="mt-2 flex items-start gap-2 sm:gap-3">
-          <span className="w-8 shrink-0 pt-1 text-xs font-medium text-[#9a9288]">
+          <span className="hidden w-8 shrink-0 pt-1 text-xs font-medium text-[#9a9288] sm:block">
             本週
           </span>
           <div className="min-w-0 flex-1">
-            <p className="mb-1 text-xs text-[#9a9288]">
+            <p className="mb-1 truncate text-xs text-[#9a9288]">
               {week.rangeLabel}
               <span className="ml-1 text-[#b5aea3]">（共 {weekCount} 週）</span>
             </p>
@@ -179,20 +189,19 @@ export default function ProgressBar({
                 style={{ left: `calc(${weekPercent}% - 6px)` }}
               />
 
-              <div className="relative mt-0.5 h-6 w-full">
+              <div className="relative mt-0.5 h-6 w-full min-w-0 overflow-hidden">
                 {week.markers.map((d, i) => {
                   const isFirst = i === 0;
                   const isLast = i === week.markers.length - 1;
                   return (
                     <div
                       key={`week-${d.label}-${i}`}
-                      className={`absolute top-0 flex flex-col ${
-                        isFirst
+                      className={`absolute top-0 flex flex-col ${isFirst
                           ? "items-start"
                           : isLast
                             ? "items-end"
                             : "items-center"
-                      }`}
+                        }`}
                       style={{
                         left: isFirst ? "0%" : isLast ? "auto" : `${d.position}%`,
                         right: isLast ? "0%" : "auto",
@@ -200,18 +209,16 @@ export default function ProgressBar({
                       }}
                     >
                       <div
-                        className={`h-1 w-px ${
-                          d.isCurrent ? "bg-sage" : "bg-border"
-                        }`}
+                        className={`h-1 w-px ${d.isCurrent ? "bg-sage" : "bg-border"
+                          }`}
                       />
                       <span
-                        className={`mt-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-medium ${
-                          d.isCurrent
+                        className={`mt-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-medium ${d.isCurrent
                             ? "bg-sage text-white"
                             : d.isPast
                               ? "bg-tag-sage text-[#9a9288]"
                               : "bg-surface-inactive text-[#b5aea3]"
-                        }`}
+                          }`}
                       >
                         {d.label}
                       </span>
@@ -222,8 +229,8 @@ export default function ProgressBar({
             </div>
           </div>
 
-          <div className="w-28 shrink-0 pt-1 text-right text-xs sm:w-32">
-            <p className="whitespace-nowrap font-semibold text-[#4a443c]">
+          <div className="hidden w-28 shrink-0 pt-1 text-right text-xs sm:block sm:w-32">
+            <p className="font-semibold text-[#4a443c]">
               已完成 {formatHours(weekCompleted)}/{formatHours(weekGoal)} 小時
             </p>
           </div>

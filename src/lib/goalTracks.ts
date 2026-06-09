@@ -1,5 +1,11 @@
 import { DEFAULT_PROGRESS_GOAL } from "@/lib/progress";
-import { getWeekKey, type Task, type WeeklyProgress } from "@/lib/tasks";
+import {
+  getWeekKey,
+  parseTaskNoteItems,
+  parseTaskTodoItems,
+  type Task,
+  type WeeklyProgress,
+} from "@/lib/tasks";
 
 export interface GoalTrack {
   id: string;
@@ -54,6 +60,9 @@ export function parseTasks(raw: unknown): Task[] {
       completedHours: Number(t.completedHours) || 0,
       done: Boolean(t.done),
       order: Number(t.order) || 0,
+      todos: parseTaskTodoItems(t.todos),
+      archivedTodos: parseTaskTodoItems(t.archivedTodos),
+      notes: parseTaskNoteItems(t.notes),
     }));
 }
 

@@ -5,7 +5,12 @@ import { LEVEL_LABELS, type Task, type TaskLevel } from "@/lib/tasks";
 
 interface AddTaskInlineProps {
   level: TaskLevel;
-  onAdd: (task: Omit<Task, "id" | "order" | "done" | "completedHours">) => void;
+  onAdd: (
+    task: Omit<
+      Task,
+      "id" | "order" | "done" | "completedHours" | "todos" | "archivedTodos" | "notes"
+    >
+  ) => void;
   onCancel: () => void;
   parentId?: string | null;
   disabled?: boolean;

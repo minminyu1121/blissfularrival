@@ -25,7 +25,7 @@ export default function TopNav() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-border bg-surface/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-4 px-8 md:px-14 lg:px-20">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-4 sm:gap-4 sm:px-8 md:px-14 lg:px-20">
           {/* 左側 Logo */}
           <Link href="/dashboard" className="flex shrink-0 items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-gradient">
@@ -41,11 +41,11 @@ export default function TopNav() {
             {loading ? (
               <div className="mx-auto h-4 w-48 animate-pulse rounded-full bg-surface-inactive" />
             ) : (
-              <p className="flex min-w-0 items-baseline justify-center gap-3 text-sm text-[#9a9288]">
+              <p className="flex min-w-0 items-baseline justify-center gap-2 text-sm text-[#9a9288] sm:gap-3">
                 <span className="shrink-0 font-semibold text-[#4a443c]">
                   嗨！{displayName}
                 </span>
-                <span className="truncate">{greetingText}</span>
+                <span className="hidden truncate sm:inline">{greetingText}</span>
               </p>
             )}
           </div>
@@ -70,19 +70,16 @@ export default function TopNav() {
 
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-[#9a9288] transition-all hover:bg-tag-sage hover:text-[#4a443c]"
+              className="rounded-xl px-2 py-1.5 text-xs text-[#9a9288] transition-all hover:bg-tag-sage hover:text-[#4a443c] sm:px-3 sm:text-sm"
               aria-label="設定"
               title="設定"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" strokeLinecap="round" />
-              </svg>
+              設定
             </button>
 
             <button
               onClick={handleLogout}
-              className="rounded-xl px-3 py-1.5 text-sm text-[#9a9288] transition-all hover:bg-surface-inactive hover:text-[#4a443c]"
+              className="rounded-xl px-2 py-1.5 text-xs text-[#9a9288] transition-all hover:bg-surface-inactive hover:text-[#4a443c] sm:px-3 sm:text-sm"
             >
               登出
             </button>

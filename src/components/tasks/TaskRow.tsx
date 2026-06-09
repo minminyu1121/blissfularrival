@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { getHoursProgressPercent } from "@/lib/progress";
 import {
   formatHours,
@@ -12,16 +11,13 @@ import {
 interface TaskRowProps {
   task: Task;
   tasks: Task[];
-  isSelected?: boolean;
-  onSelect?: (id: string) => void;
+  isPanelOpen?: boolean;
+  childLevelLabel?: string;
+  isAddingChild?: boolean;
+  onAddChild?: () => void;
+  onOpenPanel?: (id: string) => void;
   onToggleDone: (id: string) => void;
   onAdjustHours: (id: string, delta: number) => void;
-  onUpdateTitle: (id: string, title: string) => void;
-  onUpdateRequiredHours: (id: string, requiredHours: number) => void;
-  onMove: (id: string, direction: "up" | "down") => void;
-  onDelete: (id: string) => void;
-  canMoveUp?: boolean;
-  canMoveDown?: boolean;
 }
 
 const INDENT: Record<Task["level"], string> = {
@@ -30,105 +26,67 @@ const INDENT: Record<Task["level"], string> = {
   mini: "pl-12",
 };
 
+const ROW_GRID_BIG =
+  "grid-cols-[minmax(0,1fr)_4.5rem_6.75rem]";
+const ROW_GRID_NORM_DESKTOP =
+  "md:grid-cols-[minmax(0,1fr)_21.78rem_4.5rem_6.75rem]";
+
 export default function TaskRow({
   task,
   tasks,
-  isSelected = false,
-  onSelect,
+  isPanelOpen = false,
+  childLevelLabel,
+  isAddingChild = false,
+  onAddChild,
+  onOpenPanel,
   onToggleDone,
   onAdjustHours,
-  onUpdateTitle,
-  onUpdateRequiredHours,
-  onMove,
-  onDelete,
-  canMoveUp = false,
-  canMoveDown = false,
 }: TaskRowProps) {
-  const [title, setTitle] = useState(task.title);
-  const [requiredDraft, setRequiredDraft] = useState(String(task.requiredHours));
   const hours = getTaskHours(task, tasks);
   const isLeaf = isLeafTask(task, tasks);
   const barPercent = getHoursProgressPercent(hours.completed, hours.required);
   const allDone = isLeaf ? task.done : getChildrenAllDone(task, tasks);
   const isBig = task.level === "big";
+  const canHaveChild = childLevelLabel !== undefined;
 
-  useEffect(() => {
-    setTitle(task.title);
-  }, [task.title]);
-
-  useEffect(() => {
-    setRequiredDraft(String(task.requiredHours));
-  }, [task.requiredHours]);
-
-  const saveRequiredHours = () => {
-    const parsed = parseFloat(requiredDraft);
-    if (isNaN(parsed) || parsed <= 0) {
-      setRequiredDraft(String(task.requiredHours));
-      return;
-    }
-    if (parsed !== task.requiredHours) {
-      onUpdateRequiredHours(task.id, parsed);
-    }
-  };
+  const rowClass = isBig
+    ? ROW_GRID_BIG
+    : `grid-cols-1 ${ROW_GRID_NORM_DESKTOP}`;
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={() => onSelect?.(task.id)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect?.(task.id);
-        }
-      }}
-      className={`group grid cursor-pointer items-center gap-x-2 border-b border-border/40 py-1.5 transition-colors ${
-        isBig
-          ? "grid-cols-[minmax(0,1fr)_4.5rem_6.75rem_1.5rem]"
-          : "grid-cols-[minmax(0,1fr)_18rem_4.5rem_6.75rem_1.5rem]"
-      } ${isSelected ? "bg-tag-sage/70" : "hover:bg-background/60"}`}
+      className={`group grid items-center gap-x-2 gap-y-1 border-b border-border/40 py-1.5 ${rowClass} ${
+        isPanelOpen || isAddingChild
+          ? "bg-tag-sage/40"
+          : "hover:bg-background/40"
+      }`}
     >
       <div
         className={`flex min-w-0 items-center gap-1.5 overflow-hidden ${INDENT[task.level]}`}
       >
-        <div
-          className={`flex shrink-0 flex-col gap-0.5 transition-opacity ${
-            isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-          }`}
-        >
+        {canHaveChild && (
           <button
             type="button"
-            disabled={!canMoveUp}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMove(task.id, "up");
-            }}
-            className="flex h-4 w-4 items-center justify-center rounded text-[10px] text-[#b5aea3] hover:bg-tag-sage hover:text-[#4a443c] disabled:cursor-not-allowed disabled:opacity-30"
-            title="上移"
-            aria-label="上移任務"
+            onClick={() => onAddChild?.()}
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] transition-all ${
+              isAddingChild
+                ? "bg-tag-sage font-medium text-[#4a443c] ring-1 ring-sage/50"
+                : "text-[#b5aea3] opacity-40 hover:bg-tag-sage hover:text-[#6b6358] group-hover:opacity-100"
+            }`}
+            aria-label={`新增${childLevelLabel}`}
+            title={
+              isAddingChild
+                ? `關閉新增${childLevelLabel}`
+                : `新增${childLevelLabel}`
+            }
           >
-            ↑
+            +
           </button>
-          <button
-            type="button"
-            disabled={!canMoveDown}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMove(task.id, "down");
-            }}
-            className="flex h-4 w-4 items-center justify-center rounded text-[10px] text-[#b5aea3] hover:bg-tag-sage hover:text-[#4a443c] disabled:cursor-not-allowed disabled:opacity-30"
-            title="下移"
-            aria-label="下移任務"
-          >
-            ↓
-          </button>
-        </div>
+        )}
 
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleDone(task.id);
-          }}
+          type="button"
+          onClick={() => onToggleDone(task.id)}
           className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${
             allDone
               ? "border-sage-dark bg-sage text-white"
@@ -136,100 +94,88 @@ export default function TaskRow({
           }`}
         >
           {allDone && (
-            <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M2 6l3 3 5-5" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              viewBox="0 0 12 12"
+              className="h-3 w-3"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                d="M2 6l3 3 5-5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           )}
         </button>
 
-        <input
-          value={title}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => {
-            if (title !== task.title) onUpdateTitle(task.id, title);
-          }}
-          className={`min-w-0 flex-1 truncate bg-transparent text-sm outline-none placeholder:text-[#b5aea3] ${
+        <button
+          type="button"
+          onClick={() => onOpenPanel?.(task.id)}
+          className={`min-w-0 flex-1 truncate text-left text-sm ${
             task.level === "big"
               ? "font-semibold text-[#4a443c]"
               : "text-[#6b6358]"
-          }`}
-          placeholder="任務名稱"
-          title={title}
-        />
+          } ${isPanelOpen ? "text-[#4a443c]" : "hover:text-[#4a443c]"}`}
+          title={task.title || "點擊開啟待辦與備注"}
+        >
+          {task.title || (
+            <span className="text-[#b5aea3]">點擊輸入任務名稱</span>
+          )}
+        </button>
       </div>
 
       {!isBig && (
-        <div className="progress-track h-1.5 w-full shrink-0">
+        <div
+          className={`flex min-w-0 items-center gap-2 md:contents ${INDENT[task.level]}`}
+        >
           <div
-            className={`h-full rounded-full transition-all ${
-              allDone || barPercent >= 100 ? "bg-sage" : barPercent > 0 ? "bg-tan" : "bg-transparent"
-            }`}
-            style={{ width: `${barPercent}%` }}
-          />
+            className="progress-track h-1.5 min-w-0 flex-1 md:w-[21.78rem] md:max-w-full md:shrink-0 md:flex-none"
+          >
+            <div
+              className={`h-full rounded-full transition-all ${
+                allDone || barPercent >= 100
+                  ? "bg-sage"
+                  : barPercent > 0
+                    ? "bg-tan"
+                    : "bg-transparent"
+              }`}
+              style={{ width: `${barPercent}%` }}
+            />
+          </div>
+
+          <div className="shrink-0 whitespace-nowrap text-right text-xs text-[#9a9288]">
+            {formatHours(hours.completed)}/{formatHours(hours.required)} 時
+          </div>
+
+          {isLeaf ? (
+            <div className="flex shrink-0 gap-0.5">
+              {[-1, -0.5, 0.5, 1].map((delta) => (
+                <button
+                  key={delta}
+                  type="button"
+                  onClick={() => onAdjustHours(task.id, delta)}
+                  className="flex h-6 w-6 items-center justify-center rounded border border-border bg-surface text-[10px] text-[#9a9288] hover:border-sage hover:bg-tag-sage hover:text-[#4a443c]"
+                >
+                  {delta > 0 ? `+${delta}` : delta}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="hidden w-0 md:block" />
+          )}
         </div>
       )}
 
-      {/* 點選葉節點任務可編輯所需時數 */}
-      <div
-        className="flex items-center justify-end gap-0.5 text-xs text-[#9a9288]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span>{formatHours(hours.completed)}/</span>
-        {isSelected && isLeaf ? (
-          <input
-            type="number"
-            min="0.5"
-            step="0.5"
-            value={requiredDraft}
-            onChange={(e) => setRequiredDraft(e.target.value)}
-            onBlur={saveRequiredHours}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                saveRequiredHours();
-              }
-            }}
-            className="input-number-plain focus-accent w-12 rounded border border-sage bg-surface px-1 py-0.5 text-right text-xs text-[#4a443c]"
-            aria-label="所需時數"
-          />
-        ) : (
-          <span>{formatHours(hours.required)}</span>
-        )}
-        <span>時</span>
-      </div>
-
-      {isLeaf ? (
-        <div className="flex gap-0.5">
-          {[-1, -0.5, 0.5, 1].map((delta) => (
-            <button
-              key={delta}
-              onClick={(e) => {
-                e.stopPropagation();
-                onAdjustHours(task.id, delta);
-              }}
-              className="flex h-6 w-6 items-center justify-center rounded border border-border bg-surface text-[10px] text-[#9a9288] hover:border-sage hover:bg-tag-sage hover:text-[#4a443c]"
-            >
-              {delta > 0 ? `+${delta}` : delta}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div />
+      {isBig && (
+        <>
+          <div className="shrink-0 whitespace-nowrap text-right text-xs text-[#9a9288]">
+            {formatHours(hours.completed)}/{formatHours(hours.required)} 時
+          </div>
+          <div className="w-0" />
+        </>
       )}
-
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(task.id);
-        }}
-        className="rounded p-1 text-[#b5aea3] opacity-0 transition-opacity hover:text-coral group-hover:opacity-100"
-        title="刪除"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-          <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
-        </svg>
-      </button>
     </div>
   );
 }

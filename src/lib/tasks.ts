@@ -1,5 +1,19 @@
 export type TaskLevel = "big" | "small" | "mini";
 
+export interface TaskTodoItem {
+  id: string;
+  text: string;
+  done: boolean;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface TaskNoteItem {
+  id: string;
+  text: string;
+  createdAt: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -9,6 +23,56 @@ export interface Task {
   completedHours: number;
   done: boolean;
   order: number;
+  todos: TaskTodoItem[];
+  archivedTodos: TaskTodoItem[];
+  notes: TaskNoteItem[];
+}
+
+export function getTodayDateString(now = new Date()): string {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function parseTaskTodoItems(raw: unknown): TaskTodoItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => item as Record<string, unknown>)
+    .filter((item) => typeof item.id === "string")
+    .map((item) => ({
+      id: String(item.id),
+      text: typeof item.text === "string" ? item.text : "",
+      done: Boolean(item.done),
+      createdAt:
+        typeof item.createdAt === "string"
+          ? item.createdAt
+          : getTodayDateString(),
+      completedAt:
+        typeof item.completedAt === "string" ? item.completedAt : undefined,
+    }));
+}
+
+export function parseTaskNoteItems(raw: unknown): TaskNoteItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => item as Record<string, unknown>)
+    .filter((item) => typeof item.id === "string")
+    .map((item) => ({
+      id: String(item.id),
+      text: typeof item.text === "string" ? item.text : "",
+      createdAt:
+        typeof item.createdAt === "string"
+          ? item.createdAt
+          : getTodayDateString(),
+    }));
+}
+
+export function createEmptyTaskExtras(): Pick<
+  Task,
+  "todos" | "archivedTodos" | "notes"
+> {
+  return { todos: [], archivedTodos: [], notes: [] };
 }
 
 export interface WeeklyProgress {
@@ -129,6 +193,34 @@ export function getSiblingTasks(tasks: Task[], task: Task): Task[] {
   return tasks
     .filter((t) => t.parentId === task.parentId)
     .sort((a, b) => a.order - b.order);
+}
+
+// 將任務調整至同層的指定順序（1-based，最多 10）
+export function setTaskSiblingOrder(
+  tasks: Task[],
+  taskId: string,
+  targetPosition: number
+): Task[] | null {
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) return null;
+
+  const siblings = getSiblingTasks(tasks, task);
+  const clamped = Math.min(
+    siblings.length,
+    Math.max(1, Math.min(10, Math.round(targetPosition)))
+  );
+  const fromIndex = siblings.findIndex((t) => t.id === taskId);
+  const toIndex = clamped - 1;
+  if (fromIndex < 0 || fromIndex === toIndex) return null;
+
+  const reordered = [...siblings];
+  const [moved] = reordered.splice(fromIndex, 1);
+  reordered.splice(toIndex, 0, moved);
+
+  const orderMap = new Map(reordered.map((t, i) => [t.id, i]));
+  return tasks.map((t) =>
+    orderMap.has(t.id) ? { ...t, order: orderMap.get(t.id)! } : t
+  );
 }
 
 // 在同層兄弟任務間上移／下移

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useUserProfile } from "@/contexts/UserProfileProvider";
 import type { GoalTrack } from "@/lib/goalTracks";
 import { formatDateZh } from "@/lib/progress";
@@ -19,12 +20,17 @@ export default function ProgressGoalModal({
   onClose,
 }: ProgressGoalModalProps) {
   const { saving, updateGoalTrack } = useUserProfile();
+  const [mounted, setMounted] = useState(false);
 
   const [title, setTitle] = useState(track.title);
   const [startDate, setStartDate] = useState(track.startDate);
   const [targetDate, setTargetDate] = useState(track.targetDate);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -44,7 +50,16 @@ export default function ProgressGoalModal({
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open || !mounted) return null;
 
   const handleSave = async () => {
     setError("");
@@ -71,38 +86,50 @@ export default function ProgressGoalModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-[#616161]/20 backdrop-blur-sm"
+        className="absolute inset-0 bg-[#616161]/25 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden
       />
 
-      <div className="relative w-full max-w-md rounded-2xl bg-surface shadow-xl ring-1 ring-border">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="font-serif text-lg font-semibold text-[#616161]">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="progress-goal-title"
+        className="relative z-10 w-full max-w-sm rounded-2xl bg-surface shadow-xl ring-1 ring-border"
+      >
+        <div className="flex items-center justify-between border-b border-border px-5 py-3">
+          <h2
+            id="progress-goal-title"
+            className="font-serif text-sm font-semibold text-[#616161]"
+          >
             進度目標設定
           </h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[#9e9e9e] hover:bg-surface-inactive"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-xs text-[#9e9e9e] hover:bg-surface-inactive"
             aria-label="關閉"
           >
             ✕
           </button>
         </div>
 
-        <div className="px-6 py-5">
-          <div className="mb-6 rounded-2xl bg-surface-inactive px-5 py-4">
-            <p className="text-xs text-[#9e9e9e]">標語預覽</p>
-            <p className="mt-1 text-base font-semibold text-[#616161]">
+        <div className="px-5 py-4">
+          <div className="mb-4 rounded-xl bg-surface-inactive px-4 py-3">
+            <p className="text-[11px] text-[#9e9e9e]">標語預覽</p>
+            <p className="mt-1 text-sm font-semibold text-[#616161]">
               {formatDateZh(targetDate)}
               {title.trim() || "目標名稱"}
             </p>
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="goal-title" className="mb-1.5 block text-sm font-semibold text-[#757575]">
+          <div className="mb-3">
+            <label
+              htmlFor="goal-title"
+              className="mb-1 block text-xs font-semibold text-[#757575]"
+            >
               目標名稱
             </label>
             <input
@@ -111,14 +138,17 @@ export default function ProgressGoalModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="例如：上架WellthCoach"
-              className="focus-accent h-11 w-full rounded-xl border border-border bg-surface px-4 text-[#616161] placeholder:text-[#bdbdbd]"
+              className="focus-accent h-9 w-full rounded-xl border border-border bg-surface px-3 text-xs text-[#616161] placeholder:text-[#bdbdbd]"
             />
-            <p className="mt-1 text-xs text-[#bdbdbd]">可自行修改目標名稱</p>
+            <p className="mt-1 text-[11px] text-[#bdbdbd]">可自行修改目標名稱</p>
           </div>
 
-          <div className="mb-4 grid grid-cols-2 gap-3">
+          <div className="mb-3 grid grid-cols-2 gap-2.5">
             <div>
-              <label htmlFor="goal-start" className="mb-1.5 block text-sm font-semibold text-[#757575]">
+              <label
+                htmlFor="goal-start"
+                className="mb-1 block text-xs font-semibold text-[#757575]"
+              >
                 起始日
               </label>
               <input
@@ -126,11 +156,14 @@ export default function ProgressGoalModal({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="focus-accent h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-[#616161]"
+                className="focus-accent h-9 w-full rounded-xl border border-border bg-surface px-2.5 text-xs text-[#616161]"
               />
             </div>
             <div>
-              <label htmlFor="goal-target" className="mb-1.5 block text-sm font-semibold text-[#757575]">
+              <label
+                htmlFor="goal-target"
+                className="mb-1 block text-xs font-semibold text-[#757575]"
+              >
                 目標日期
               </label>
               <input
@@ -138,13 +171,13 @@ export default function ProgressGoalModal({
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="focus-accent h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-[#616161]"
+                className="focus-accent h-9 w-full rounded-xl border border-border bg-surface px-2.5 text-xs text-[#616161]"
               />
             </div>
           </div>
 
           {error && (
-            <p className="mb-4 rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-500">
+            <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-500">
               {error}
             </p>
           )}
@@ -152,12 +185,13 @@ export default function ProgressGoalModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex h-11 w-full items-center justify-center rounded-xl bg-accent-gradient text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            className="flex h-9 w-full items-center justify-center rounded-xl bg-accent-gradient text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
           >
             {saved ? "已儲存 ✓" : saving ? "儲存中..." : "儲存設定"}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
